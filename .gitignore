@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+
+# Python caches
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+
+# Virtual envs
+**/.venv/
+**/venv/
+
+# Node (如果以后有前端)
+**/node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# ML artifacts (optional)
+ai-12w/services/ml_service/artifacts/
