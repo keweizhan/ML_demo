@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, List, Optional, Union
+from typing import Any
 
 import joblib
 from fastapi import FastAPI, HTTPException
@@ -23,14 +23,14 @@ _model: Any | None = None
 class PredictRequest(BaseModel):
     # Single sample: [f1, f2, ...]
     # Batch: [[...], [...]]
-    features: Union[List[float], List[List[float]]] = Field(
+    features: list[float] | list[list[float]] = Field(
         ..., description="Single sample or batch of samples"
     )
 
 
 class PredictResponse(BaseModel):
-    prediction: Union[int, List[int]]
-    probability: Union[float, List[float], None] = None
+    prediction: int | list[int]
+    probability: float | list[float] | None = None
 
 
 def _load_model() -> Any:
@@ -64,9 +64,9 @@ def predict(req: PredictRequest) -> PredictResponse:
     try:
         model = _load_model()
     except FileNotFoundError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=409, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load model: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load model: {e}") from e
 
     features = req.features
     is_batch = isinstance(features, list) and len(features) > 0 and isinstance(features[0], list)
@@ -74,7 +74,7 @@ def predict(req: PredictRequest) -> PredictResponse:
 
     try:
         preds = model.predict(X)
-        probs: Optional[List[float]] = None
+        probs: list[float] | None = None
 
         if hasattr(model, "predict_proba"):
             p = model.predict_proba(X)
@@ -91,4 +91,4 @@ def predict(req: PredictRequest) -> PredictResponse:
             probability=(probs[0] if probs is not None else None),
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Bad input or prediction failed: {e}")
+        raise HTTPException(status_code=400, detail=f"Bad input or prediction failed: {e}") from e
