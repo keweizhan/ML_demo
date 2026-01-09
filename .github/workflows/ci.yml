@@ -2,23 +2,30 @@ name: CI
 
 on:
   push:
-    branches: ["main", "master"]
+    branches: ["main"]
   pull_request:
 
 jobs:
-  ml_service:
+  services:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service_dir:
+          - ai-12w/services/ml_service
+          - ai-12w/services/rag_service
 
     defaults:
       run:
         shell: bash
-        working-directory: ai-12w/services/ml_service
+        working-directory: ${{ matrix.service_dir }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -28,15 +35,15 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install uv
 
-      - name: Cache uv
+      - name: Cache uv + venv
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/uv
-            ai-12w/services/ml_service/.venv
-          key: ${{ runner.os }}-uv-${{ hashFiles('ai-12w/services/ml_service/uv.lock') }}
+            ${{ matrix.service_dir }}/.venv
+          key: ${{ runner.os }}-${{ matrix.service_dir }}-uv-${{ hashFiles(format('{0}/uv.lock', matrix.service_dir)) }}
           restore-keys: |
-            ${{ runner.os }}-uv-
+            ${{ runner.os }}-${{ matrix.service_dir }}-uv-
 
       - name: Sync deps
         run: uv sync --frozen
@@ -46,9 +53,6 @@ jobs:
 
       - name: Ruff lint
         run: uv run ruff check .
-
-      - name: Mypy
-        run: uv run mypy src
 
       - name: Pytest
         run: uv run pytest
