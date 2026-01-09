@@ -26,3 +26,5 @@
 
 # ML artifacts (optional)
 ai-12w/services/ml_service/artifacts/
+
+ai-12w/services/rag_service/artifacts/
